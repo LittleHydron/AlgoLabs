@@ -9,11 +9,11 @@ vector < int > comp, order;
 vector < bool > usd;
 vector < vector < int > > g, gT;
 
-void dfs(int v){
+void topsort(int v){
     usd[v] = true;
     for (int to: g[v]){
         if (!usd[to]){
-            dfs(to);
+            topsort(to);
         }
     }
     order.push_back(v);
@@ -38,7 +38,7 @@ int main(){
     }
     for (int i=0; i<V; ++ i){
         if (!usd[i]){
-            dfs(i);
+            topsort(i);
         }
     }
     reverse(all(order));
