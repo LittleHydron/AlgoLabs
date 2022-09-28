@@ -4,37 +4,33 @@
 
 using std::vector;
 
-int numOfComps;
-vector < int > comp, order;
+vector < int > order;
 vector < bool > usd;
-vector < vector < int > > g, gT;
+vector < vector < int > > graph, graphT;
 
 void topsort(int v){
     usd[v] = true;
-    for (int to: g[v]){
-        if (!usd[to]){
-            topsort(to);
+    for (int nxt: graph[v]){
+        if (!usd[nxt]){
+            topsort(nxt);
         }
     }
     order.push_back(v);
 }
 
 int main(){
-    int V, E;
     freopen("input.txt", "r", stdin);
     freopen("output.txt", "w", stdout);
-    std::cin >> V >> E;
-    g.resize(V);
-    gT.resize(V);
+    int V;
+    std::cin >> V;
+    graph.resize(V);
+    graphT.resize(V);
     usd.resize(V);
-    comp.resize(V);
-    fill(all(comp), -1);
     fill(all(usd), false);
-    while(E --){
-        int u, v;
-        std::cin >> u >> v;
-        g[u].push_back(v);
-        gT[v].push_back(u);
+    int u, v;
+    while(std::cin >> u >> v){
+        graph[u].push_back(v);
+        graphT[v].push_back(u);
     }
     for (int i=0; i<V; ++ i){
         if (!usd[i]){
@@ -43,6 +39,8 @@ int main(){
     }
     reverse(all(order));
     fill(all(usd), false);
+    int numOfComps = 0;
+    vector < int > comp(V, -1);
     for (int i: order){
         if (usd[i]) continue;
         comp[i] = numOfComps ++;
@@ -50,33 +48,33 @@ int main(){
         usd[i] = true;
         q.push(i);
         while(!q.empty()){
-            int v = q.front();
+            int cur = q.front();
             q.pop();
-            for (int to: gT[v]){
-                if (usd[to]) continue;
-                comp[to] = comp[v];
-                q.push(to);
-                usd[to] = true;
+            for (int nxt: graphT[cur]){
+                if (usd[nxt]) continue;
+                comp[nxt] = comp[cur];
+                q.push(nxt);
+                usd[nxt] = true;
             }
         }
     }
     vector < bool > hasIncomingEdge(numOfComps, false);
-    for (int i=0; i<V; ++ i){
-        for (int to: g[i]){
-            if (comp[to] != comp[i]) {
+    for (int from=0; from<V; ++ from){
+        for (int to: graph[from]){
+            if (comp[to] != comp[from]) {
                 hasIncomingEdge[comp[to]] = true;
             }
         }
     }
-    int cntOfPossibleRoots = 0, root = -1;
-    for (int i=0; i<numOfComps; ++ i){
-        if (!hasIncomingEdge[i]) ++ cntOfPossibleRoots, root = i;
+    int cntOfPossibleRoots = 0, rootComp = -1;
+    for (int c=0; c<numOfComps; ++ c){
+        if (!hasIncomingEdge[c]) ++ cntOfPossibleRoots, rootComp = c;
     }
     if (cntOfPossibleRoots > 1){
         std::cout << "-1\n";
     }else{
         for (int i=0; i<V; i++){
-            if (comp[i] == root){
+            if (comp[i] == rootComp){
                 std::cout << i << '\n';
                 break;
             }
@@ -89,7 +87,15 @@ int main(){
 
 
 /*
-7 7
+6
+0 1
+1 2
+1 5
+2 3
+3 0
+4 0
+
+7
 0 1
 1 2
 2 6
@@ -98,7 +104,7 @@ int main(){
 5 4
 6 5
 
-5 8
+5
 0 4
 1 0
 1 2
@@ -108,7 +114,7 @@ int main(){
 3 2
 4 3
 
-6 7
+6
 0 1
 1 2
 2 3
