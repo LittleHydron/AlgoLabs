@@ -33,11 +33,11 @@ int main(){
     }
     vector < bool > tmp_usd(n+1);
     long long ans = -1, max_min = -1;
-    for (int i=1; i<=n; ++ i){
-        if (isClient[i]) continue;
+    for (int server=1; server<=n; ++ server){
+        if (isClient[server]) continue;
         fill(all(tmp_usd), false);
         priority_queue < tuple < long long, int > > q;
-        q.push({0, i});
+        q.push({0, server});
         while(!q.empty()){
             tie(dist, from) = q.top();
             q.pop();
@@ -59,7 +59,6 @@ int main(){
     fclose(stdout);
     return 0;
 }
-
 
 /*
 6
