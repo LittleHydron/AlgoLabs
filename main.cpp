@@ -2,84 +2,59 @@
 
 #define all(v) (v).begin(),(v).end()
 
-using std::vector;
-
-vector < int > order;
-vector < bool > usd;
-vector < vector < int > > graph, graphT;
-
-void topsort(int v){
-    usd[v] = true;
-    for (int nxt: graph[v]){
-        if (!usd[nxt]){
-            topsort(nxt);
-        }
-    }
-    order.push_back(v);
-}
+using namespace std;
 
 int main(){
-    freopen("input.txt", "r", stdin);
-    freopen("output.txt", "w", stdout);
-    int V;
-    std::cin >> V;
-    graph.resize(V);
-    graphT.resize(V);
-    usd.resize(V);
-    fill(all(usd), false);
-    int u, v;
-    while(std::cin >> u >> v){
-        graph[u].push_back(v);
-        graphT[v].push_back(u);
-    }
-    for (int i=0; i<V; ++ i){
-        if (!usd[i]){
-            topsort(i);
+    freopen("gamsrv.in", "r", stdin);
+    freopen("gamsrv.out", "w", stdout);
+
+    int n, m;
+    cin >> n >> m;
+    string line;
+    getline(cin, line);
+    getline(cin, line);
+    vector < bool > isClient(n+1, false);
+    line += ' ';
+    int tmp = 0;
+    for (char &c: line){
+        if (c == ' '){
+            if (tmp > 0) isClient[tmp] = true;
+            tmp = 0;
+        }else{
+            tmp = tmp * 10 + (c - '0');
         }
     }
-    reverse(all(order));
-    fill(all(usd), false);
-    int numOfComps = 0;
-    vector < int > comp(V, -1);
-    for (int i: order){
-        if (usd[i]) continue;
-        comp[i] = numOfComps ++;
-        std::queue < int > q;
-        usd[i] = true;
-        q.push(i);
+    vector < vector < tuple<int, int> > > g(n+1);
+    int from, to, dist;
+    while(m --){
+        cin >> from >> to >> dist;
+        g[from].push_back({to, dist});
+        g[to].push_back({from, dist});
+    }
+    vector < bool > tmp_usd(n+1);
+    long long ans = -1, max_min = -1;
+    for (int i=1; i<=n; ++ i){
+        if (isClient[i]) continue;
+        fill(all(tmp_usd), false);
+        priority_queue < tuple < long long, int > > q;
+        q.push({0, i});
         while(!q.empty()){
-            int cur = q.front();
+            tie(dist, from) = q.top();
             q.pop();
-            for (int nxt: graphT[cur]){
-                if (usd[nxt]) continue;
-                comp[nxt] = comp[cur];
-                q.push(nxt);
-                usd[nxt] = true;
+            if (tmp_usd[from]) continue;
+            tmp_usd[from] = true;
+            dist *= -1;
+            if (isClient[from]) max_min = dist;
+            for (auto [to, latency]: g[from]){
+                if (!tmp_usd[to]){
+                    q.push({-(dist + latency), to});
+                }
             }
         }
+        if (ans == -1) ans = max_min;
+        else ans = min(ans, max_min);
     }
-    vector < bool > hasIncomingEdge(numOfComps, false);
-    for (int from=0; from<V; ++ from){
-        for (int to: graph[from]){
-            if (comp[to] != comp[from]) {
-                hasIncomingEdge[comp[to]] = true;
-            }
-        }
-    }
-    int cntOfPossibleRoots = 0, rootComp = -1;
-    for (int c=0; c<numOfComps; ++ c){
-        if (!hasIncomingEdge[c]) ++ cntOfPossibleRoots, rootComp = c;
-    }
-    if (cntOfPossibleRoots > 1){
-        std::cout << "-1\n";
-    }else{
-        for (int i=0; i<V; i++){
-            if (comp[i] == rootComp){
-                std::cout << i << '\n';
-                break;
-            }
-        }
-    }
+    cout << ans << '\n';
     fclose(stdin);
     fclose(stdout);
     return 0;
