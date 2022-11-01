@@ -5,95 +5,65 @@
 using namespace std;
 
 int main(){
-    freopen("gamsrv.in", "r", stdin);
-    freopen("gamsrv.out", "w", stdout);
+    freopen("wchain.in", "r", stdin);
+    freopen("wchain.out", "w", stdout);
 
-    int n, m;
-    cin >> n >> m;
-    string line;
-    getline(cin, line);
-    getline(cin, line);
-    vector < bool > isClient(n+1, false);
-    line += ' ';
-    int tmp = 0;
-    for (char &c: line){
-        if (c == ' '){
-            if (tmp > 0) isClient[tmp] = true;
-            tmp = 0;
-        }else{
-            tmp = tmp * 10 + (c - '0');
-        }
+    int n;
+    cin >> n;
+    unordered_map < string, int > maxChainLength;
+    vector < string > dictionary(n);
+    for (int i=0; i<n; ++ i){
+        cin >> dictionary[i];
+        maxChainLength[dictionary[i]] = 1;
     }
-    vector < vector < tuple<int, int> > > g(n+1);
-    int from, to, dist;
-    while(m --){
-        cin >> from >> to >> dist;
-        g[from].push_back({to, dist});
-        g[to].push_back({from, dist});
-    }
-    vector < bool > tmp_usd(n+1);
-    long long ans = -1, max_min = -1;
-    for (int server=1; server<=n; ++ server){
-        if (isClient[server]) continue;
-        fill(all(tmp_usd), false);
-        priority_queue < tuple < long long, int > > q;
-        q.push({0, server});
-        while(!q.empty()){
-            tie(dist, from) = q.top();
-            q.pop();
-            if (tmp_usd[from]) continue;
-            tmp_usd[from] = true;
-            dist *= -1;
-            if (isClient[from]) max_min = dist;
-            for (auto [to, latency]: g[from]){
-                if (!tmp_usd[to]){
-                    q.push({-(dist + latency), to});
-                }
+
+    sort(all(dictionary), [](string &a, string &b) -> bool {
+        return a.length() < b.length();
+    });
+
+    string pref, tmp;
+    int ans = 0;
+    for (string &s: dictionary){
+        pref = "";
+        for (int i=0; i<s.length(); ++ i){
+            tmp = pref;
+            for (int j=i+1; j<s.length(); ++ j){
+                tmp += s[j];
             }
+            if (maxChainLength[tmp] > 0) maxChainLength[s] = max(maxChainLength[s], maxChainLength[tmp] + 1);
+            pref += s[i];
         }
-        if (ans == -1) ans = max_min;
-        else ans = min(ans, max_min);
+        ans = max(ans, maxChainLength[s]);
     }
     cout << ans << '\n';
+
     fclose(stdin);
     fclose(stdout);
     return 0;
 }
 
 /*
-6
-0 1
-1 2
-1 5
-2 3
-3 0
-4 0
-
-7
-0 1
-1 2
-2 6
-3 2
-4 3
-5 4
-6 5
+10
+crates
+car
+cats
+crate
+rate
+at
+ate
+tea
+rat
+a
 
 5
-0 4
-1 0
-1 2
-2 1
-2 4
-3 1
-3 2
-4 3
+b
+bcad
+bca
+bad
+bd
 
-6
-0 1
-1 2
-2 3
-3 0
-4 3
-4 5
-5 0
+3
+word
+anotherword
+yetanotherword
 */
