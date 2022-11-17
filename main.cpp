@@ -1,69 +1,71 @@
 #include <bits/stdc++.h>
-
-#define all(v) (v).begin(),(v).end()
+#include "TestKMP.h"
 
 using namespace std;
 
-int main(){
-    freopen("wchain.in", "r", stdin);
-    freopen("wchain.out", "w", stdout);
-
-    int n;
-    cin >> n;
-    unordered_map < string, int > maxChainLength;
-    vector < string > dictionary(n);
-    for (int i=0; i<n; ++ i){
-        cin >> dictionary[i];
-        maxChainLength[dictionary[i]] = 1;
+tuple<string, string> generateWorstCaseOfLength(int textLength, int patternLength){
+    string pattern;
+    while(patternLength > 1){
+        pattern += 'a';
+        -- patternLength;
     }
-
-    sort(all(dictionary), [](string &a, string &b) -> bool {
-        return a.length() < b.length();
-    });
-
-    string pref, tmp;
-    int ans = 0;
-    for (string &s: dictionary){
-        pref = "";
-        for (int i=0; i<s.length(); ++ i){
-            tmp = pref;
-            for (int j=i+1; j<s.length(); ++ j){
-                tmp += s[j];
-            }
-            if (maxChainLength[tmp] > 0) maxChainLength[s] = max(maxChainLength[s], maxChainLength[tmp] + 1);
-            pref += s[i];
-        }
-        ans = max(ans, maxChainLength[s]);
+    pattern += 'b';
+    string text;
+    while(text.length() + pattern.length() <= textLength){
+        text += pattern;
     }
-    cout << ans << '\n';
-
-    fclose(stdin);
-    fclose(stdout);
-    return 0;
+    while(text.length() < textLength){
+        text += 'a';
+    }
+    return {text, pattern};
 }
 
-/*
-10
-crates
-car
-cats
-crate
-rate
-at
-ate
-tea
-rat
-a
+tuple<string, string> generateBestCaseOfLength(int textLength, int patternLength){
+    string pattern = "a";
+    patternLength --;
+    while(patternLength --){
+        pattern += char(int(pattern.back()) + 1);
+    }
+    string text;
+    while(textLength --){
+        text += 'b';
+    }
+    return {text, pattern};
+}
 
-5
-b
-bcad
-bca
-bad
-bd
+tuple<string, string> generateRandomTest(int textLength, int patternLength, function<int()> &randInt){
+    string text;
+    while(textLength --){
+        text += char('a' + (randInt()) % 26);
+    }
+    string pattern;
+    while(patternLength --){
+        pattern += char('a' + (randInt()) % 26);
+    }
+    return {text, pattern};
+}
 
-3
-word
-anotherword
-yetanotherword
-*/
+int main(){
+    random_device rd;
+    mt19937 mt(rd());
+    uniform_int_distribution<int> uniformDistr(0, 100001);
+    function < int() > randInt = ([&]()->int{return uniformDistr(mt);});
+    double worstAvg = 0, bestAvg = 0, randAvg = 0;
+    int numberOfTests = 20;
+    for (int tst = 0; tst < numberOfTests; ++ tst){
+        int textLength = randInt();
+        int patternLength = randInt()%textLength + 1;
+        string pattern, text;
+        tie(text, pattern) = generateBestCaseOfLength(textLength, patternLength);
+        bestAvg += (test::TestKMP::testForRightness(text, pattern)).getExecutionTime();
+        tie(text, pattern) = generateWorstCaseOfLength(textLength, patternLength);
+        worstAvg += (test::TestKMP::testForRightness(text, pattern)).getExecutionTime();
+        tie(text, pattern) = generateRandomTest(textLength, patternLength, randInt);
+        randAvg += (test::TestKMP::testForRightness(text, pattern)).getExecutionTime();
+    }
+    cout << fixed << setprecision(6);
+    cout << "Best case average time:   " << (bestAvg / (double(numberOfTests))) / CLOCKS_PER_SEC << "s\n";
+    cout << "Worst case average time:  " << (worstAvg / (double(numberOfTests))) / CLOCKS_PER_SEC << "s\n";
+    cout << "Random test average time: " << (randAvg / (double(numberOfTests))) / CLOCKS_PER_SEC << "s\n";
+    return 0;
+}
