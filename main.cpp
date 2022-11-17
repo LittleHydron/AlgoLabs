@@ -24,7 +24,7 @@ tuple<string, string> generateBestCaseOfLength(int textLength, int patternLength
     string pattern = "a";
     patternLength --;
     while(patternLength --){
-        pattern += char(int(pattern.back()) + 1);
+        pattern += min('z', char(int(pattern.back()) + 1));
     }
     string text;
     while(textLength --){
